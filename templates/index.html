@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamepad Data UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .output {
+            padding: 10px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .outputCalib {
+            padding: 10px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .highlight {
+            background-color: greenyellow;
+        }
+
+        .highlight-calib {
+            background-color: yellow;
+        }
+
+        .calibration-status {
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+
+        function updateGamepadData() {
+            fetch('/gamepad')
+                .then(response => response.json())
+                .then(data => {
+                    renderUI(data);
+                });
+        }
+
+        setInterval(updateGamepadData, 100);
+
+        // Function to render the UI
+        function renderUI(data) {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            // Display calibration status
+            const calibrationStatus = document.createElement('div');
+            calibrationStatus.className = 'calibration-status';
+            calibrationStatus.textContent = `In Calibration: ${data.inCalibration}`;
+            app.appendChild(calibrationStatus);
+
+            // Display outputs dynamically
+            data.outputs.forEach((output, index) => {
+                const outputDiv = document.createElement('div');
+                outputDiv.className = 'output';
+
+                // Highlight selected output during calibration
+                if (index === data.selectedOutput) {
+                    outputDiv.classList.add(data.inCalibration ? 'highlight-calib' : 'highlight');
+                }
+
+                outputDiv.appendChild(document.createTextNode(`Output ${index + 1}: ${output.value}`));
+
+
+                const outputCalibDiv = document.createElement('div');
+                outputCalibDiv.className = 'outputCalib';
+
+                // Print each key-value pair of the output object
+                Object.keys(output).forEach(key => {
+                    if (key !== 'value') {
+                        const property = document.createElement('div');
+                        property.textContent = `${key}: ${output[key]}`;
+                        outputCalibDiv.appendChild(property);
+                    }
+                });
+                outputDiv.appendChild(outputCalibDiv);
+
+                app.appendChild(outputDiv);
+            });
+        }
+
+        // Initial render
+        renderUI(window.data);
+    </script>
+</body>
+</html>
